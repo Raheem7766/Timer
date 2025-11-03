@@ -152,11 +152,7 @@ const CountdownTimer = () => {
       </div>
 
       {/* Footer */}
-      <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 px-2 text-center">
-        <p className="text-stake-text-secondary text-xs sm:text-sm">
-          {CONFIG.FOOTER_TEXT}
-        </p>
-      </div>
+    
     </div>
   );
 };
