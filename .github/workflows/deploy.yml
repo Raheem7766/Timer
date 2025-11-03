@@ -2,7 +2,6 @@ name: Deploy to slash.casino
 on:
   push:
     branches: [ main ]
-
 concurrency:
   group: deploy-prod
   cancel-in-progress: true
@@ -12,24 +11,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-
       - run: npm ci
-      - run: npm run build    
-      
+      - run: npm run build   # creates ./dist
 
-      - name: Upload dist to server
-        uses: appleboy/scp-action@v0.1.7
+      - name: Add host key
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SERVER_HOST }}       
-          username: ${{ secrets.SERVER_USER }}  
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "dist/*"
-          target: "${{ secrets.SERVER_PATH }}/public_html/"
-          strip_components: 1
-          overwrite: true
-          rm: true
+          script: |
+            mkdir -p ~/.ssh
+            ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy using rsync (dist -> public_html)
+        uses: burnett01/rsync-deployments@5.2
+        with:
+          switches: -avzr --delete
+          path: dist/                                   # contents of dist/
+          remote_path: ${{ secrets.SERVER_PATH }}/public_html/
+          remote_host: ${{ secrets.SERVER_HOST }}
+          remote_user: ${{ secrets.SERVER_USER }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Fix ownership & perms
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            chown -R MoeedAther:www-data /home/MoeedAther/web/slash.casino/public_html
+            find /home/MoeedAther/web/slash.casino/public_html -type d -exec chmod 755 {} \;
+            find /home/MoeedAther/web/slash.casino/public_html -type f -exec chmod 644 {} \;
