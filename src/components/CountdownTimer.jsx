@@ -41,7 +41,7 @@ const CountdownTimer = () => {
 
   const TimeUnit = ({ value, label }) => (
     <div className="flex flex-col items-center w-full">
-      <div className="countdown-card rounded-2xl p-4 sm:p-6 w-full max-w-[120px] text-center transform hover:scale-105 transition-all duration-300">
+      <div className="countdown-card rounded-2xl p sm:p-6 w-full max-w-[120px] text-center transform hover:scale-105 transition-all duration-300">
         <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-stake-green glow-text mb-2">
           {value.toString().padStart(2, '0')}
         </div>
