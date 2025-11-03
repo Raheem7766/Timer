@@ -11,7 +11,7 @@ export const CONFIG = {
   TOTAL_COUNTDOWN_DAYS: 15,
   
   // App title and description
-  APP_TITLE: 'Slash Casino Coming Soon!',
+  APP_TITLE: 'Slash Casino Coming',
   APP_DESCRIPTION: 'Something amazing is brewing. Get ready for an experience that will change everything.',
   
   // Launch message
