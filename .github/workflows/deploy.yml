@@ -2,6 +2,7 @@ name: Deploy to slash.casino
 on:
   push:
     branches: [ main ]
+
 concurrency:
   group: deploy-prod
   cancel-in-progress: true
@@ -18,6 +19,7 @@ jobs:
       - run: npm ci
       - run: npm run build   # creates ./dist
 
+      # Add host key (no interactive prompt)
       - name: Add host key
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -28,6 +30,7 @@ jobs:
             mkdir -p ~/.ssh
             ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
+      # Copy the **CONTENTS** of dist/ to the REAL web root
       - name: Deploy using rsync (dist -> public_html)
         uses: burnett01/rsync-deployments@5.2
         with:
@@ -38,13 +41,15 @@ jobs:
           remote_user: ${{ secrets.SERVER_USER }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Fix ownership & perms
+      # Make files readable by nginx and owned by your user
+      - name: Ownership & perms + version
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            chown -R MoeedAther:www-data /home/MoeedAther/web/slash.casino/public_html
-            find /home/MoeedAther/web/slash.casino/public_html -type d -exec chmod 755 {} \;
-            find /home/MoeedAther/web/slash.casino/public_html -type f -exec chmod 644 {} \;
+            chown -R MoeedAther:www-data ${{ secrets.SERVER_PATH }}/public_html
+            find ${{ secrets.SERVER_PATH }}/public_html -type d -exec chmod 755 {} \;
+            find ${{ secrets.SERVER_PATH }}/public_html -type f -exec chmod 644 {} \;
+            echo "${{ github.sha }} $(date -u +'%Y-%m-%dT%H:%M:%SZ')" > ${{ secrets.SERVER_PATH }}/public_html/version.txt
